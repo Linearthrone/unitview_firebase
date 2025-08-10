@@ -2,6 +2,6 @@
   "/_not-found/page": "/_not-found",
   "/facility-setup/page": "/facility-setup",
   "/chargeview/page": "/chargeview",
-  "/unitview/page": "/unitview",
-  "/page": "/"
+  "/page": "/",
+  "/unitview/page": "/unitview"
 }
