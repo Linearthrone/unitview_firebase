@@ -1,7 +1,8 @@
 {
   "projects": {
     "prep": "unitview",
-    "default": "unitview"
+    "default": "unitview",
+    "unitview": "unitview"
   },
   "targets": {},
   "etags": {}

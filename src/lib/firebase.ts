@@ -5,12 +5,14 @@ import { getAuth } from 'firebase/auth';
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'unitview',
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+    apiKey: "AIzaSyDkfXVHFo7tR9oV0Cd-lVtXhDFDe9_yO_I",
+    authDomain: "unitview.firebaseapp.com",
+    databaseURL: "https://unitview-default-rtdb.firebaseio.com",
+    projectId: "unitview",
+    storageBucket: "unitview.firebasestorage.app",
+    messagingSenderId: "185648925766",
+    appId: "1:185648925766:web:5ae6271dd4977f6e158e47"
+
 };
 
 // Initialize Firebase
