@@ -25,7 +25,7 @@
         "x-next-revalidate-tag-token"
       ]
     },
-    "/chargeview": {
+    "/facility-setup": {
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -38,8 +38,8 @@
         }
       ],
       "initialRevalidateSeconds": false,
-      "srcRoute": "/chargeview",
-      "dataRoute": "/chargeview.rsc",
+      "srcRoute": "/facility-setup",
+      "dataRoute": "/facility-setup.rsc",
       "allowHeader": [
         "host",
         "x-matched-path",
@@ -73,7 +73,7 @@
         "x-next-revalidate-tag-token"
       ]
     },
-    "/facility-setup": {
+    "/chargeview": {
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -86,8 +86,8 @@
         }
       ],
       "initialRevalidateSeconds": false,
-      "srcRoute": "/facility-setup",
-      "dataRoute": "/facility-setup.rsc",
+      "srcRoute": "/chargeview",
+      "dataRoute": "/chargeview.rsc",
       "allowHeader": [
         "host",
         "x-matched-path",
@@ -101,8 +101,8 @@
   "dynamicRoutes": {},
   "notFoundRoutes": [],
   "preview": {
-    "previewModeId": "7290db93ebc4b525db545ae337dcc69a",
-    "previewModeSigningKey": "3a8c8b8ba15c39259a3bf86b559bec1dfb09e1858380a6d3c2857d25aea80af6",
-    "previewModeEncryptionKey": "e1fffe72d239b1fd4c0c2e0b5d7d3aa648d72ade12a2c172faf0b7eb9957390a"
+    "previewModeId": "4600aef5daed1c1be4efd162a86a8e6a",
+    "previewModeSigningKey": "8ad46629e381f1bee5554f04fe555dc26ceb26e851af04bd5475f0336bda7c8e",
+    "previewModeEncryptionKey": "91ce61a37dbac535e42ab71d36ecfbe90b6a7e3af678fb033a6dd1fe73d35308"
   }
 }
