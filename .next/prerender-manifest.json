@@ -25,6 +25,30 @@
         "x-next-revalidate-tag-token"
       ]
     },
+    "/facility-setup": {
+      "experimentalBypassFor": [
+        {
+          "type": "header",
+          "key": "Next-Action"
+        },
+        {
+          "type": "header",
+          "key": "content-type",
+          "value": "multipart/form-data;.*"
+        }
+      ],
+      "initialRevalidateSeconds": false,
+      "srcRoute": "/facility-setup",
+      "dataRoute": "/facility-setup.rsc",
+      "allowHeader": [
+        "host",
+        "x-matched-path",
+        "x-prerender-revalidate",
+        "x-prerender-revalidate-if-generated",
+        "x-next-revalidated-tags",
+        "x-next-revalidate-tag-token"
+      ]
+    },
     "/chargeview": {
       "experimentalBypassFor": [
         {
@@ -72,37 +96,13 @@
         "x-next-revalidated-tags",
         "x-next-revalidate-tag-token"
       ]
-    },
-    "/facility-setup": {
-      "experimentalBypassFor": [
-        {
-          "type": "header",
-          "key": "Next-Action"
-        },
-        {
-          "type": "header",
-          "key": "content-type",
-          "value": "multipart/form-data;.*"
-        }
-      ],
-      "initialRevalidateSeconds": false,
-      "srcRoute": "/facility-setup",
-      "dataRoute": "/facility-setup.rsc",
-      "allowHeader": [
-        "host",
-        "x-matched-path",
-        "x-prerender-revalidate",
-        "x-prerender-revalidate-if-generated",
-        "x-next-revalidated-tags",
-        "x-next-revalidate-tag-token"
-      ]
     }
   },
   "dynamicRoutes": {},
   "notFoundRoutes": [],
   "preview": {
-    "previewModeId": "b92ee0cbed6fb9274cd731cacaea6b5d",
-    "previewModeSigningKey": "3eed260a436107b25ef92e8e942b5b5d512648b6e6679df4cf5afb81d9122628",
-    "previewModeEncryptionKey": "bef63328811f48fc5230a0c96e21a97ffc4142df844b90922a93076f673d2d91"
+    "previewModeId": "39aef0d7001a80a791b8269d52062abb",
+    "previewModeSigningKey": "ef77b0124dd4fdf6fb8aff3d25882b18567498a53e9a8788f4799b054a6a8680",
+    "previewModeEncryptionKey": "4017871884b089ec204202285fc8b80970ddeaf98e8a010d0ccfb1a27a89c51a"
   }
 }
