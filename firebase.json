@@ -1,18 +1,36 @@
 {
   "hosting": {
-    "public": ".next",
+    "public": "public",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
-    ],
-    "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
     ]
-  }
+  },
+  "apphosting": [
+    {
+      "backendId": "studio",
+      "rootDir": "/",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "functions"
+      ],
+      "alwaysDeployFromSource": true
+    },
+    {
+      "backendId": "unitview",
+      "rootDir": "/",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "functions"
+      ],
+      "alwaysDeployFromSource": false
+    }
+  ]
 }
-
-// This file is used to configure Firebase Hosting for a Next.js application.
