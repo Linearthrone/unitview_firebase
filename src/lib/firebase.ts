@@ -5,7 +5,7 @@ import { getAuth } from 'firebase/auth';
 
 // Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyDkfXVHFo7tR9oV0Cd-lVtXhDFDe9_yO_I",
+    apiKey: "AIzaSyARvbAJtv-NBJnJQ3EdZNU3WsMnXThFzhM",
     authDomain: "unitview.firebaseapp.com",
     databaseURL: "https://unitview-default-rtdb.firebaseio.com",
     projectId: "unitview",
