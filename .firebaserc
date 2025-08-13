@@ -2,7 +2,8 @@
   "projects": {
     "prep": "unitview",
     "default": "unitview",
-    "unitview": "unitview"
+    "unitview": "unitview",
+    "alpha-test": "overwatch-unitview"
   },
   "targets": {},
   "etags": {}
