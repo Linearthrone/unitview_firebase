@@ -13,6 +13,7 @@ This document outlines the performance optimizations implemented to address slow
    - Updates were not reliably persisted
    - No offline support
    - No optimistic UI updates
+   - Units created in Facility Setup weren't being saved properly
 
 ## Optimization Solutions
 
@@ -59,6 +60,14 @@ This document outlines the performance optimizations implemented to address slow
   - Added pending changes tracking
   - Implemented automatic synchronization when connection is restored
 
+### 5. Fixed Unit Saving Issues
+
+- **Facility Setup Integration**
+  - Updated Facility Setup page to use optimized Firebase implementation
+  - Added proper error handling for unit creation
+  - Implemented optimistic UI updates for immediate feedback
+  - Added loading indicators during unit creation
+
 ## Implementation Details
 
 ### Key Files Modified
@@ -77,6 +86,12 @@ This document outlines the performance optimizations implemented to address slow
    - Added skeleton loading states
    - Implemented suspense boundaries
    - Improved component structure
+
+4. **`facility-setup/page-optimized.tsx`**
+   - Updated to use optimized Firebase implementation
+   - Added proper error handling for unit creation
+   - Implemented parallel data loading
+   - Added skeleton loading states
 
 ## Deployment
 
@@ -111,6 +126,7 @@ Expected improvements:
 - **Data Saving**: Near-instant with optimistic updates
 - **Offline Support**: Full functionality when offline
 - **Network Usage**: 50-60% reduction in requests
+- **Unit Creation**: Reliable saving with immediate feedback
 
 ## Future Improvements
 
@@ -118,3 +134,4 @@ Expected improvements:
 2. Add progressive loading for large datasets
 3. Implement real-time updates with Firestore snapshots
 4. Add compression for network payloads
+5. Implement automated testing for data persistence
