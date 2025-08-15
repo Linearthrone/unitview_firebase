@@ -1,7 +1,0 @@
-{
-  "/_not-found/page": "app/_not-found/page.js",
-  "/page": "app/page.js",
-  "/facility-setup/page": "app/facility-setup/page.js",
-  "/unitview/page": "app/unitview/page.js",
-  "/chargeview/page": "app/chargeview/page.js"
-}
