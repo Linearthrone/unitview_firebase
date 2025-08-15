@@ -6,7 +6,7 @@ import { CreateUnitDialog } from '@/components/facility/create-unit-dialog';
 import { ModuleToggleCard } from '@/components/facility/module-toggle-card';
 import { PatientGrid } from '@/components/shared/patient-grid';
 import { UnitCard } from '@/components/facility/unit-card';
-import { getUnits, createUnit, getModules, updateModule, setupDefaultModules, initializeUnitData, Unit, Module } from '@/lib/firebase';
+import { getUnits, createUnit, getModules, updateModule, setupDefaultModules, Unit, Module } from '@/lib/firebase';
 import { toast } from '@/components/ui/use-toast';
 
 export default function FacilitySetupPage() {
