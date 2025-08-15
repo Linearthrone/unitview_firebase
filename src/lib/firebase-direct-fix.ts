@@ -12,13 +12,7 @@ import {
   where, 
   DocumentData,
   writeBatch,
-  enableIndexedDbPersistence,
-  connectFirestoreEmulator,
-  enableMultiTabIndexedDbPersistence,
-  CACHE_SIZE_UNLIMITED,
-  initializeFirestore,
-  persistentLocalCache,
-  persistentSingleTabManager
+  CACHE_SIZE_UNLIMITED
 } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getAuth } from 'firebase/auth';
@@ -34,10 +28,10 @@ const firebaseConfig = {
     appId: "1:185648925766:web:5ae6271dd4977f6e158e47"
 };
 
-// Initialize Firebase with optimized settings
+// Initialize Firebase
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-// Initialize Firestore with optimized cache settings
+// Get Firestore instance (using getFirestore to avoid initialization conflicts)
 const db = getFirestore(app);
 
 const storage = getStorage(app);

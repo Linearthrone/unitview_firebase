@@ -1,4 +1,4 @@
-// File: C:\Users\kurtw\Downloads\unitview_firebase_implementation\src\app\unitview\page.tsx
+// File: /workspace/unitview_firebase_repo/src/app/unitview/page.tsx
 import * as entry from '../../../../src/app/unitview/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
