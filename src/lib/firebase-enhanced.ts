@@ -11,7 +11,6 @@ import {
   query, 
   where, 
   writeBatch
-
 } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getAuth } from 'firebase/auth';
@@ -27,26 +26,9 @@ const firebaseConfig = {
     appId: "1:185648925766:web:5ae6271dd4977f6e158e47"
 };
 
-// Initialize Firebase with optimized settings
+// Initialize Firebase
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-
-// Initialize Firestore with optimized cache settings
-const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({
-    cacheSizeBytes: CACHE_SIZE_UNLIMITED,
-    tabManager: persistentSingleTabManager()
-  })
-});
-
-// Enable offline persistence (will use the cache when offline)
-try {
-  enableIndexedDbPersistence(db).catch((err) => {
-    console.error("Firestore persistence error:", err);
-  });
-} catch (error) {
-  console.warn("Firestore persistence already enabled or not supported");
-}
-
+const db = getFirestore(app);
 const storage = getStorage(app);
 const auth = getAuth(app);
 
@@ -127,17 +109,6 @@ const pctsCollection = collection(db, 'pcts');
 const staffCollection = collection(db, 'staff');
 const modulesCollection = collection(db, 'modules');
 
-// Cache for units data
-let unitsCache: Unit[] | null = null;
-let unitDataCache: Map<string, {
-  unit: Unit | null,
-  patients: Patient[],
-  nurses: Nurse[],
-  pcts: PCT[],
-  chargeNurse: StaffMember | null,
-  unitClerk: StaffMember | null
-}> = new Map();
-
 // Unit Functions
 export async function createUnit(unitData: Omit<Unit, 'id' | 'createdAt' | 'updatedAt'>): Promise<Unit> {
   const timestamp = Date.now();
@@ -150,42 +121,22 @@ export async function createUnit(unitData: Omit<Unit, 'id' | 'createdAt' | 'upda
   };
   
   await setDoc(unitRef, newUnit);
-  
-  // Update cache
-  if (unitsCache) {
-    unitsCache.push(newUnit);
-  }
-  
   return newUnit;
 }
 
 export async function getUnits(): Promise<Unit[]> {
-  // Return from cache if available
-  if (unitsCache) {
-    return unitsCache;
-  }
-  
   const snapshot = await getDocs(unitsCollection);
   return snapshot.docs.map(doc => {
     return { id: doc.id, ...doc.data() } as Unit;
   });
-
 }
 
 export async function getUnit(unitId: string): Promise<Unit | null> {
-  // Check cache first
-  const cachedData = unitDataCache.get(unitId);
-  if (cachedData?.unit) {
-    return cachedData.unit;
-  }
-  
   const unitRef = doc(unitsCollection, unitId);
   const unitSnap = await getDoc(unitRef);
   
   if (unitSnap.exists()) {
-
     return { id: unitSnap.id, ...unitSnap.data() } as Unit;
-
   }
   
   return null;
@@ -193,27 +144,10 @@ export async function getUnit(unitId: string): Promise<Unit | null> {
 
 export async function updateUnit(unitId: string, data: Partial<Unit>): Promise<void> {
   const unitRef = doc(unitsCollection, unitId);
-  const updateData = {
+  await updateDoc(unitRef, {
     ...data,
     updatedAt: Date.now()
-  };
-  
-  await updateDoc(unitRef, updateData);
-  
-  // Update cache
-  if (unitsCache) {
-    const index = unitsCache.findIndex(u => u.id === unitId);
-    if (index !== -1) {
-      unitsCache[index] = { ...unitsCache[index], ...updateData };
-    }
-  }
-  
-  if (unitDataCache.has(unitId) && unitDataCache.get(unitId)!.unit) {
-    unitDataCache.get(unitId)!.unit = { 
-      ...unitDataCache.get(unitId)!.unit!, 
-      ...updateData 
-    };
-  }
+  });
 }
 
 export async function deleteUnit(unitId: string): Promise<void> {
@@ -225,13 +159,6 @@ export async function deleteUnit(unitId: string): Promise<void> {
   await deleteUnitNurses(unitId);
   await deleteUnitPCTs(unitId);
   await deleteUnitStaff(unitId);
-  
-  // Update cache
-  if (unitsCache) {
-    unitsCache = unitsCache.filter(u => u.id !== unitId);
-  }
-  
-  unitDataCache.delete(unitId);
 }
 
 // Patient Functions
@@ -246,22 +173,15 @@ export async function createPatient(patientData: Omit<Patient, 'id' | 'createdAt
   };
   
   await setDoc(patientRef, newPatient);
-  
-  // Update cache
-  if (unitDataCache.has(patientData.unitId)) {
-    unitDataCache.get(patientData.unitId)!.patients.push(newPatient);
-  }
-  
   return newPatient;
 }
 
 // Batch create patients for better performance
 export async function batchCreatePatients(patientsData: Omit<Patient, 'id' | 'createdAt' | 'updatedAt'>[]): Promise<Patient[]> {
-
   if (patientsData.length === 0) {
     return [];
   }
-
+  
   const timestamp = Date.now();
   const batch = writeBatch(db);
   const newPatients: Patient[] = [];
@@ -277,7 +197,6 @@ export async function batchCreatePatients(patientsData: Omit<Patient, 'id' | 'cr
     
     batch.set(patientRef, newPatient);
     newPatients.push(newPatient);
-
   }
   
   await batch.commit();
@@ -285,83 +204,34 @@ export async function batchCreatePatients(patientsData: Omit<Patient, 'id' | 'cr
 }
 
 export async function getPatientsByUnit(unitId: string): Promise<Patient[]> {
-  // Check cache first
-  const cachedData = unitDataCache.get(unitId);
-  if (cachedData?.patients.length > 0) {
-    return cachedData.patients;
-  }
-  
   const q = query(patientsCollection, where('unitId', '==', unitId));
   const snapshot = await getDocs(q);
   return snapshot.docs.map(doc => {
     return { id: doc.id, ...doc.data() } as Patient;
   });
-
 }
 
 export async function updatePatient(patientId: string, data: Partial<Patient>): Promise<void> {
   const patientRef = doc(patientsCollection, patientId);
-  const updateData = {
+  await updateDoc(patientRef, {
     ...data,
     updatedAt: Date.now()
-  };
-  
-  await updateDoc(patientRef, updateData);
-  
-  // Update cache
-  for (const [unitId, cachedData] of unitDataCache.entries()) {
-    const index = cachedData.patients.findIndex(p => p.id === patientId);
-    if (index !== -1) {
-      cachedData.patients[index] = { ...cachedData.patients[index], ...updateData };
-      break;
-    }
-  }
-}
-
-// Batch update patients for better performance
-export async function batchUpdatePatients(updates: { id: string, data: Partial<Patient> }[]): Promise<void> {
-  const batch = writeBatch(db);
-  const timestamp = Date.now();
-  
-  for (const { id, data } of updates) {
-    const patientRef = doc(patientsCollection, id);
-    batch.update(patientRef, { ...data, updatedAt: timestamp });
-    
-    // Update cache
-    for (const [unitId, cachedData] of unitDataCache.entries()) {
-      const index = cachedData.patients.findIndex(p => p.id === id);
-      if (index !== -1) {
-        cachedData.patients[index] = { 
-          ...cachedData.patients[index], 
-          ...data,
-          updatedAt: timestamp
-        };
-        break;
-      }
-    }
-  }
-  
-  await batch.commit();
+  });
 }
 
 export async function deletePatient(patientId: string): Promise<void> {
   const patientRef = doc(patientsCollection, patientId);
   await deleteDoc(patientRef);
-  
-  // Update cache
-  for (const [unitId, cachedData] of unitDataCache.entries()) {
-    cachedData.patients = cachedData.patients.filter(p => p.id !== patientId);
-  }
 }
 
 export async function deleteUnitPatients(unitId: string): Promise<void> {
   const q = query(patientsCollection, where('unitId', '==', unitId));
   const snapshot = await getDocs(q);
+  
   if (snapshot.empty) {
     return;
   }
   
-
   const batch = writeBatch(db);
   snapshot.docs.forEach(doc => {
     batch.delete(doc.ref);
@@ -382,12 +252,6 @@ export async function createNurse(nurseData: Omit<Nurse, 'id' | 'createdAt' | 'u
   };
   
   await setDoc(nurseRef, newNurse);
-  
-  // Update cache
-  if (unitDataCache.has(nurseData.unitId)) {
-    unitDataCache.get(nurseData.unitId)!.nurses.push(newNurse);
-  }
-  
   return newNurse;
 }
 
@@ -396,7 +260,7 @@ export async function batchCreateNurses(nursesData: Omit<Nurse, 'id' | 'createdA
   if (nursesData.length === 0) {
     return [];
   }
-
+  
   const timestamp = Date.now();
   const batch = writeBatch(db);
   const newNurses: Nurse[] = [];
@@ -412,7 +276,6 @@ export async function batchCreateNurses(nursesData: Omit<Nurse, 'id' | 'createdA
     
     batch.set(nurseRef, newNurse);
     newNurses.push(newNurse);
-
   }
   
   await batch.commit();
@@ -420,68 +283,41 @@ export async function batchCreateNurses(nursesData: Omit<Nurse, 'id' | 'createdA
 }
 
 export async function getNursesByUnit(unitId: string): Promise<Nurse[]> {
-  // Check cache first
-  const cachedData = unitDataCache.get(unitId);
-  if (cachedData?.nurses.length > 0) {
-    return cachedData.nurses;
-  }
-  
   const q = query(nursesCollection, where('unitId', '==', unitId));
   const snapshot = await getDocs(q);
-
   return snapshot.docs.map(doc => {
     return { id: doc.id, ...doc.data() } as Nurse;
   });
-
 }
 
 export async function updateNurse(nurseId: string, data: Partial<Nurse>): Promise<void> {
   const nurseRef = doc(nursesCollection, nurseId);
-  const updateData = {
+  await updateDoc(nurseRef, {
     ...data,
     updatedAt: Date.now()
-  };
-  
-  await updateDoc(nurseRef, updateData);
-  
-  // Update cache
-  for (const [unitId, cachedData] of unitDataCache.entries()) {
-    const index = cachedData.nurses.findIndex(n => n.id === nurseId);
-    if (index !== -1) {
-      cachedData.nurses[index] = { ...cachedData.nurses[index], ...updateData };
-      break;
-    }
-  }
+  });
 }
 
 export async function deleteNurse(nurseId: string): Promise<void> {
   const nurseRef = doc(nursesCollection, nurseId);
   await deleteDoc(nurseRef);
-  
-  // Update cache
-  for (const [unitId, cachedData] of unitDataCache.entries()) {
-    cachedData.nurses = cachedData.nurses.filter(n => n.id !== nurseId);
-  }
 }
 
 export async function deleteUnitNurses(unitId: string): Promise<void> {
   const q = query(nursesCollection, where('unitId', '==', unitId));
-  const snapshot = await getDocs(
+  const snapshot = await getDocs(q);
+  
   if (snapshot.empty) {
     return;
   }
   
-
   const batch = writeBatch(db);
   snapshot.docs.forEach(doc => {
     batch.delete(doc.ref);
   });
   
   await batch.commit();
-
-
 }
-
 
 // PCT Functions
 export async function createPCT(pctData: Omit<PCT, 'id' | 'createdAt' | 'updatedAt'>): Promise<PCT> {
@@ -495,18 +331,11 @@ export async function createPCT(pctData: Omit<PCT, 'id' | 'createdAt' | 'updated
   };
   
   await setDoc(pctRef, newPCT);
-  
-  // Update cache
-  if (unitDataCache.has(pctData.unitId)) {
-    unitDataCache.get(pctData.unitId)!.pcts.push(newPCT);
-  }
-  
   return newPCT;
 }
 
 // Batch create PCTs for better performance
 export async function batchCreatePCTs(pctsData: Omit<PCT, 'id' | 'createdAt' | 'updatedAt'>[]): Promise<PCT[]> {
-
   if (pctsData.length === 0) {
     return [];
   }
@@ -533,15 +362,8 @@ export async function batchCreatePCTs(pctsData: Omit<PCT, 'id' | 'createdAt' | '
 }
 
 export async function getPCTsByUnit(unitId: string): Promise<PCT[]> {
-  // Check cache first
-  const cachedData = unitDataCache.get(unitId);
-  if (cachedData?.pcts.length > 0) {
-    return cachedData.pcts;
-  }
-  
   const q = query(pctsCollection, where('unitId', '==', unitId));
   const snapshot = await getDocs(q);
-
   return snapshot.docs.map(doc => {
     return { id: doc.id, ...doc.data() } as PCT;
   });
@@ -549,42 +371,25 @@ export async function getPCTsByUnit(unitId: string): Promise<PCT[]> {
 
 export async function updatePCT(pctId: string, data: Partial<PCT>): Promise<void> {
   const pctRef = doc(pctsCollection, pctId);
-  const updateData = {
+  await updateDoc(pctRef, {
     ...data,
     updatedAt: Date.now()
-  };
-  
-  await updateDoc(pctRef, updateData);
-  
-  // Update cache
-  for (const [unitId, cachedData] of unitDataCache.entries()) {
-    const index = cachedData.pcts.findIndex(p => p.id === pctId);
-    if (index !== -1) {
-      cachedData.pcts[index] = { ...cachedData.pcts[index], ...updateData };
-      break;
-    }
-  }
+  });
 }
 
 export async function deletePCT(pctId: string): Promise<void> {
   const pctRef = doc(pctsCollection, pctId);
   await deleteDoc(pctRef);
-  
-  // Update cache
-  for (const [unitId, cachedData] of unitDataCache.entries()) {
-    cachedData.pcts = cachedData.pcts.filter(p => p.id !== pctId);
-  }
 }
 
 export async function deleteUnitPCTs(unitId: string): Promise<void> {
   const q = query(pctsCollection, where('unitId', '==', unitId));
   const snapshot = await getDocs(q);
   
-
   if (snapshot.empty) {
     return;
   }
-
+  
   const batch = writeBatch(db);
   snapshot.docs.forEach(doc => {
     batch.delete(doc.ref);
@@ -605,26 +410,15 @@ export async function createStaffMember(staffData: Omit<StaffMember, 'id' | 'cre
   };
   
   await setDoc(staffRef, newStaff);
-  
-  // Update cache
-  if (unitDataCache.has(staffData.unitId)) {
-    if (staffData.role === 'chargeNurse') {
-      unitDataCache.get(staffData.unitId)!.chargeNurse = newStaff;
-    } else if (staffData.role === 'unitClerk') {
-      unitDataCache.get(staffData.unitId)!.unitClerk = newStaff;
-    }
-  }
-  
   return newStaff;
 }
 
 // Batch create staff members for better performance
 export async function batchCreateStaffMembers(staffData: Omit<StaffMember, 'id' | 'createdAt' | 'updatedAt'>[]): Promise<StaffMember[]> {
-
   if (staffData.length === 0) {
     return [];
   }
-
+  
   const timestamp = Date.now();
   const batch = writeBatch(db);
   const newStaffMembers: StaffMember[] = [];
@@ -640,7 +434,6 @@ export async function batchCreateStaffMembers(staffData: Omit<StaffMember, 'id' 
     
     batch.set(staffRef, newStaff);
     newStaffMembers.push(newStaff);
-
   }
   
   await batch.commit();
@@ -656,14 +449,6 @@ export async function getStaffByUnit(unitId: string): Promise<StaffMember[]> {
 }
 
 export async function getStaffByUnitAndRole(unitId: string, role: 'chargeNurse' | 'unitClerk'): Promise<StaffMember | null> {
-  // Check cache first
-  const cachedData = unitDataCache.get(unitId);
-  if (role === 'chargeNurse' && cachedData?.chargeNurse) {
-    return cachedData.chargeNurse;
-  } else if (role === 'unitClerk' && cachedData?.unitClerk) {
-    return cachedData.unitClerk;
-  }
-  
   const q = query(staffCollection, where('unitId', '==', unitId), where('role', '==', role));
   const snapshot = await getDocs(q);
   
@@ -671,43 +456,21 @@ export async function getStaffByUnitAndRole(unitId: string, role: 'chargeNurse' 
     return null;
   }
   
-
   const staffData = snapshot.docs[0].data();
   return { id: snapshot.docs[0].id, ...staffData } as StaffMember;
-
 }
 
 export async function updateStaffMember(staffId: string, data: Partial<StaffMember>): Promise<void> {
   const staffRef = doc(staffCollection, staffId);
-  const updateData = {
+  await updateDoc(staffRef, {
     ...data,
     updatedAt: Date.now()
-  };
-  
-  await updateDoc(staffRef, updateData);
-  
-  // Update cache
-  for (const [unitId, cachedData] of unitDataCache.entries()) {
-    if (cachedData.chargeNurse?.id === staffId) {
-      cachedData.chargeNurse = { ...cachedData.chargeNurse, ...updateData };
-    } else if (cachedData.unitClerk?.id === staffId) {
-      cachedData.unitClerk = { ...cachedData.unitClerk, ...updateData };
-    }
-  }
+  });
 }
 
 export async function deleteStaffMember(staffId: string): Promise<void> {
   const staffRef = doc(staffCollection, staffId);
   await deleteDoc(staffRef);
-  
-  // Update cache
-  for (const [unitId, cachedData] of unitDataCache.entries()) {
-    if (cachedData.chargeNurse?.id === staffId) {
-      cachedData.chargeNurse = null;
-    } else if (cachedData.unitClerk?.id === staffId) {
-      cachedData.unitClerk = null;
-    }
-  }
 }
 
 export async function deleteUnitStaff(unitId: string): Promise<void> {
@@ -718,14 +481,12 @@ export async function deleteUnitStaff(unitId: string): Promise<void> {
     return;
   }
   
-
   const batch = writeBatch(db);
   snapshot.docs.forEach(doc => {
     batch.delete(doc.ref);
   });
   
   await batch.commit();
-
 }
 
 // Module Functions
@@ -746,21 +507,20 @@ export async function updateModule(moduleId: string, enabled: boolean): Promise<
 
 export async function initializeModules(modules: Omit<Module, 'updatedAt'>[]): Promise<void> {
   const timestamp = Date.now();
-  const batch = writeBatch(db);
   
-  for (const module of modules) {
+  const initPromises = modules.map(async (module) => {
     const moduleRef = doc(modulesCollection, module.id);
     const moduleSnap = await getDoc(moduleRef);
     
     if (!moduleSnap.exists()) {
-      batch.set(moduleRef, {
+      await setDoc(moduleRef, {
         ...module,
         updatedAt: timestamp
       });
     }
-  }
+  });
   
-  await batch.commit();
+  await Promise.all(initPromises);
 }
 
 // Initialize default modules if they don't exist
@@ -776,6 +536,7 @@ export async function setupDefaultModules(): Promise<void> {
   await initializeModules(defaultModules);
 }
 
+// Enhanced unit data initialization with batch operations
 export async function initializeUnitData(unit: Unit): Promise<{
   patients: Patient[],
   nurses: Nurse[],
@@ -854,7 +615,7 @@ export async function initializeUnitData(unit: Unit): Promise<{
     });
   }
   
-
+  // Create all data using batch operations for better performance
   const [patients, nurses, pcts, staffMembers] = await Promise.all([
     batchCreatePatients(patientsData),
     batchCreateNurses(nursesData),
@@ -882,4 +643,5 @@ export async function initializeUnitData(unit: Unit): Promise<{
     unitClerk
   };
 }
+
 export { app, db, storage, auth };
