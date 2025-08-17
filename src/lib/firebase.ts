@@ -248,8 +248,7 @@ export async function batchCreatePatients(patientsData: Omit<Patient, 'id' | 'cr
 
 export async function getPatientsByUnit(unitId: string): Promise<Patient[]> {
   // Check cache first
-  const cachedData = unitDataCache.get(unitId);
-  if (cachedData?.patients.length > 0) {
+    const cachedData = unitDataCache.get(unitId);     {
     return cachedData.patients;
   }
   
@@ -428,7 +427,7 @@ export async function deleteNurse(nurseId: string): Promise<void> {
 
 export async function deleteUnitNurses(unitId: string): Promise<void> {
   const q = query(nursesCollection, where('unitId', '==', unitId));
-  const snapshot = await getDocs(
+  const snapshot = await getDocs(q);
   if (snapshot.empty) {
     return;
   }
