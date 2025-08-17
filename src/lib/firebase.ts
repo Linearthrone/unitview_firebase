@@ -1,17 +1,27 @@
-   import { app, db, storage, auth } from './firebase-config';
-   import { 
-     collection, 
-     doc, 
-     setDoc, 
-     getDoc, 
-     getDocs, 
-     updateDoc, 
-     deleteDoc, 
-     query, 
-     where, 
-     DocumentData,
-     writeBatch
-   }from 'firebase/firestore';
+
+import { app, db, storage, auth } from './firebase-config';
+import { collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, query, where, DocumentData, writeBatch } from 'firebase/firestore';
+
+// Unit Types
+export interface Unit {
+    id: string;
+    designation: string;
+    roomCount: number;
+    roomRanges: string[];
+    nurseCardCount: number;
+    pctCardCount: number;
+    hasChargeNurse: boolean;
+    hasUnitClerk: boolean;
+    createdAt?: number;
+    updatedAt?: number;
+}
+import { getStorage } from 'firebase/storage';
+import { getAuth } from 'firebase/auth';
+
+const storage = getStorage(app);
+const auth = getAuth(app);
+
+
 // Unit Types
 export interface Unit {
   id: string;
@@ -427,8 +437,8 @@ export async function deleteNurse(nurseId: string): Promise<void> {
 }
 
 export async function deleteUnitNurses(unitId: string): Promise<void> {
-  const q = query(nursesCollection, where('unitId', '==', unitId));
-  const snapshot = await getDocs(
+  const  q = query(nursesCollection, where('unitId', '==', unitId));
+  const snapshot = await getDocs(q);    
   if (snapshot.empty) {
     return;
   }

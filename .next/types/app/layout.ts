@@ -1,4 +1,4 @@
-// File: C:\Users\kurtw\Downloads\unitview_firebase_implementation\src\app\layout.tsx
+// File: C:\Users\kurtw\source\repos\Linearthrone\unitview_firebase\src\app\layout.tsx
 import * as entry from '../../../src/app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

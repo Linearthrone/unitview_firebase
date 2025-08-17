@@ -103,7 +103,7 @@
         "transform": "lodash/{{member}}"
       }
     },
-    "outputFileTracingRoot": "C:\\Users\\kurtw\\Downloads\\unitview_firebase_implementation",
+    "outputFileTracingRoot": "C:\\Users\\kurtw\\source\\repos\\Linearthrone\\unitview_firebase",
     "allowedDevOrigins": [
       "https://*.cloudworkstations.dev"
     ],
@@ -289,10 +289,10 @@
     "bundlePagesRouterDependencies": false,
     "configFileName": "next.config.js",
     "turbopack": {
-      "root": "C:\\Users\\kurtw\\Downloads\\unitview_firebase_implementation"
+      "root": "C:\\Users\\kurtw\\source\\repos\\Linearthrone\\unitview_firebase"
     }
   },
-  "appDir": "C:\\Users\\kurtw\\Downloads\\unitview_firebase_implementation",
+  "appDir": "C:\\Users\\kurtw\\source\\repos\\Linearthrone\\unitview_firebase",
   "relativeAppDir": "",
   "files": [
     ".next\\routes-manifest.json",
