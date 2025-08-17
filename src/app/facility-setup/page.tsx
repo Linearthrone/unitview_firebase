@@ -4,10 +4,11 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { CreateUnitDialog } from '@/components/facility/create-unit-dialog';
 import { ModuleToggleCard } from '@/components/facility/module-toggle-card';
-import { PatientGrid } from '@/components/shared/patient-grid';
+import { PatientGrid } from '@/components/shared/patient-grid-optimized';
 import { UnitCard } from '@/components/facility/unit-card';
 import { getUnits, createUnit, getModules, updateModule, setupDefaultModules, initializeUnitData, Unit, Module } from '@/lib/firebase';
 import { toast } from '@/components/ui/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function FacilitySetupPage() {
   const [units, setUnits] = useState<Unit[]>([]);
@@ -25,18 +26,19 @@ export default function FacilitySetupPage() {
         // Initialize default modules if they don't exist
         await setupDefaultModules();
         
-        // Load units
-        const unitData = await getUnits();
+        // Load units and modules in parallel for better performance
+        const [unitData, moduleData] = await Promise.all([
+          getUnits(),
+          getModules()
+        ]);
+        
         setUnits(unitData);
+        setModules(moduleData);
         
         // Set selected unit to the first unit if available
         if (unitData.length > 0 && !selectedUnit) {
           setSelectedUnit(unitData[0]);
         }
-        
-        // Load modules
-        const moduleData = await getModules();
-        setModules(moduleData);
       } catch (error) {
         console.error('Error loading data:', error);
         toast({
@@ -54,8 +56,16 @@ export default function FacilitySetupPage() {
 
   const handleCreateUnit = async (unitData: Omit<Unit, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
+      // Show loading toast
+      toast({
+        title: 'Creating Unit',
+        description: 'Please wait while we set up your unit...',
+      });
+      
       const newUnit = await createUnit(unitData);
-      setUnits([...units, newUnit]);
+      
+      // Update local state immediately (optimistic update)
+      setUnits(prevUnits => [...prevUnits, newUnit]);
       setSelectedUnit(newUnit);
       setIsCreateUnitOpen(false);
       
@@ -79,15 +89,15 @@ export default function FacilitySetupPage() {
       const moduleToUpdate = modules.find(m => m.id === moduleId);
       if (!moduleToUpdate) return;
       
-      // Update in Firestore
-      await updateModule(moduleId, !moduleToUpdate.enabled);
-      
-      // Update local state
+      // Update local state immediately (optimistic update)
       setModules(modules.map(module => 
         module.id === moduleId 
           ? { ...module, enabled: !module.enabled } 
           : module
       ));
+      
+      // Update in Firestore
+      await updateModule(moduleId, !moduleToUpdate.enabled);
       
       toast({
         title: 'Module Updated',
@@ -95,6 +105,10 @@ export default function FacilitySetupPage() {
       });
     } catch (error) {
       console.error('Error toggling module:', error);
+      
+      // Revert the optimistic update if there was an error
+      setModules(prevModules => [...prevModules]);
+      
       toast({
         title: 'Error',
         description: 'Failed to update module. Please try again.',
@@ -109,10 +123,26 @@ export default function FacilitySetupPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6 flex items-center justify-center h-[50vh]">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-t-blue-600 border-blue-200 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+      <div className="container mx-auto p-6">
+        <div className="flex justify-between items-center mb-8">
+          <Skeleton className="h-10 w-48" />
+          <Skeleton className="h-10 w-32" />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left sidebar skeleton */}
+          <div className="space-y-4">
+            <Skeleton className="h-8 w-24 mb-4" />
+            {[1, 2, 3].map(i => (
+              <Skeleton key={i} className="h-24 w-full rounded-lg" />
+            ))}
+          </div>
+
+          {/* Main content skeleton */}
+          <div className="lg:col-span-2">
+            <Skeleton className="h-8 w-48 mb-4" />
+            <Skeleton className="h-64 w-full rounded-lg" />
+          </div>
         </div>
       </div>
     );
