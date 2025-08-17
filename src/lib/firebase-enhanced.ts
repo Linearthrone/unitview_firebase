@@ -15,23 +15,6 @@ import {
 import { getStorage } from 'firebase/storage';
 import { getAuth } from 'firebase/auth';
 
-// Firebase configuration
-const firebaseConfig = {
-    apiKey: "AIzaSyARvbAJtv-NBJnJQ3EdZNU3WsMnXThFzhM",
-    authDomain: "unitview.firebaseapp.com",
-    databaseURL: "https://unitview-default-rtdb.firebaseio.com",
-    projectId: "unitview",
-    storageBucket: "unitview.firebasestorage.app",
-    messagingSenderId: "185648925766",
-    appId: "1:185648925766:web:5ae6271dd4977f6e158e47"
-};
-
-// Initialize Firebase
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-const db = getFirestore(app);
-const storage = getStorage(app);
-const auth = getAuth(app);
-
 // Unit Types
 export interface Unit {
   id: string;
