@@ -1,17 +1,27 @@
-   import { app, db, storage, auth } from './firebase-config';
-   import { 
-     collection, 
-     doc, 
-     setDoc, 
-     getDoc, 
-     getDocs, 
-     updateDoc, 
-     deleteDoc, 
-     query, 
-     where, 
-     DocumentData,
-     writeBatch
-   }from 'firebase/firestore';
+
+import { app, db, storage, auth } from './firebase-config';
+import { collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, query, where, DocumentData, writeBatch } from 'firebase/firestore';
+
+// Unit Types
+export interface Unit {
+    id: string;
+    designation: string;
+    roomCount: number;
+    roomRanges: string[];
+    nurseCardCount: number;
+    pctCardCount: number;
+    hasChargeNurse: boolean;
+    hasUnitClerk: boolean;
+    createdAt?: number;
+    updatedAt?: number;
+}
+import { getStorage } from 'firebase/storage';
+import { getAuth } from 'firebase/auth';
+
+const storage = getStorage(app);
+const auth = getAuth(app);
+
+
 // Unit Types
 export interface Unit {
   id: string;
@@ -248,7 +258,8 @@ export async function batchCreatePatients(patientsData: Omit<Patient, 'id' | 'cr
 
 export async function getPatientsByUnit(unitId: string): Promise<Patient[]> {
   // Check cache first
-    const cachedData = unitDataCache.get(unitId);     {
+  const cachedData = unitDataCache.get(unitId);
+  if (cachedData?.patients.length > 0) {
     return cachedData.patients;
   }
   
@@ -426,8 +437,8 @@ export async function deleteNurse(nurseId: string): Promise<void> {
 }
 
 export async function deleteUnitNurses(unitId: string): Promise<void> {
-  const q = query(nursesCollection, where('unitId', '==', unitId));
-  const snapshot = await getDocs(q);
+  const  q = query(nursesCollection, where('unitId', '==', unitId));
+  const snapshot = await getDocs(q);    
   if (snapshot.empty) {
     return;
   }
