@@ -31,6 +31,24 @@
         "functions"
       ],
       "alwaysDeployFromSource": false
+    },
+    {
+      "backendId": "unitview",
+      "rootDir": "/",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "functions"
+      ],
+      "alwaysDeployFromSource": false
     }
-  ]
+  ],
+  "firestore": {
+    "database": "unitview",
+    "location": "nam5",
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  }
 }
