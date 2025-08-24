@@ -1,11 +1,10 @@
-
 'use client';
 
 import { useState } from 'react';
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Unit } from '@/lib/firebase';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface CreateUnitDialogProps {
   open: boolean;
