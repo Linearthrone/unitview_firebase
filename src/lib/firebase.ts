@@ -4,26 +4,6 @@ import { collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, query, 
 
 // Unit Types
 export interface Unit {
-    id: string;
-    designation: string;
-    roomCount: number;
-    roomRanges: string[];
-    nurseCardCount: number;
-    pctCardCount: number;
-    hasChargeNurse: boolean;
-    hasUnitClerk: boolean;
-    createdAt?: number;
-    updatedAt?: number;
-}
-import { getStorage } from 'firebase/storage';
-import { getAuth } from 'firebase/auth';
-
-const storage = getStorage(app);
-const auth = getAuth(app);
-
-
-// Unit Types
-export interface Unit {
   id: string;
   designation: string;
   roomCount: number;
@@ -855,3 +835,5 @@ export async function initializeUnitData(unit: Unit): Promise<{
   };
 }
 export { app, db, storage, auth };
+
+    
