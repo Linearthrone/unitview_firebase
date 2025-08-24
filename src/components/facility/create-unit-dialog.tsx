@@ -1,18 +1,20 @@
+
 'use client';
 
 import { useState } from 'react';
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Unit } from '@/lib/firebase';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 
 interface CreateUnitDialogProps {
   open: boolean;
   onClose: () => void;
-  onCreateUnit: (unitData: Omit<Unit, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  onCreateUnit: (unitData: Omit<Unit, 'id' | 'createdAt' | 'updatedAt' | 'facilityId'>) => void;
 }
 
 export function CreateUnitDialog({ open, onClose, onCreateUnit }: CreateUnitDialogProps) {
-  const [formData, setFormData] = useState<Omit<Unit, 'id' | 'createdAt' | 'updatedAt'>>({
+  const [formData, setFormData] = useState<Omit<Unit, 'id' | 'createdAt' | 'updatedAt' | 'facilityId'>>({
     designation: '',
     roomCount: 0,
     roomRanges: [''],
@@ -105,155 +107,149 @@ export function CreateUnitDialog({ open, onClose, onCreateUnit }: CreateUnitDial
     }
   };
 
-  if (!open) return null;
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-4">Create New Unit</h2>
-        
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            {/* Unit Designation */}
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Unit Designation
-              </label>
-              <input
-                type="text"
-                name="designation"
-                value={formData.designation}
-                onChange={handleChange}
-                className={`w-full p-2 border rounded ${errors.designation ? 'border-red-500' : ''}`}
-                placeholder="e.g., 4 West"
-              />
-              {errors.designation && (
-                <p className="text-red-500 text-xs mt-1">{errors.designation}</p>
-              )}
-            </div>
-            
-            {/* Number of Patient Rooms */}
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Number of Patient Rooms
-              </label>
-              <input
-                type="number"
-                name="roomCount"
-                value={formData.roomCount}
-                onChange={handleChange}
-                className={`w-full p-2 border rounded ${errors.roomCount ? 'border-red-500' : ''}`}
-                min="1"
-              />
-              {errors.roomCount && (
-                <p className="text-red-500 text-xs mt-1">{errors.roomCount}</p>
-              )}
-            </div>
-            
-            {/* Room Number Ranges */}
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Room Number Range(s)
-              </label>
-              <input
-                type="text"
-                name="roomRanges"
-                value={formData.roomRanges.join(', ')}
-                onChange={handleChange}
-                className={`w-full p-2 border rounded ${errors.roomRanges ? 'border-red-500' : ''}`}
-                placeholder="e.g., 401-412, 450-455"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Enter ranges separated by commas (e.g., 401-412, 450-455)
-              </p>
-              {errors.roomRanges && (
-                <p className="text-red-500 text-xs mt-1">{errors.roomRanges}</p>
-              )}
-            </div>
-            
-            {/* Nurse Cards */}
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Standard Number of Nurse Cards
-              </label>
-              <input
-                type="number"
-                name="nurseCardCount"
-                value={formData.nurseCardCount}
-                onChange={handleChange}
-                className={`w-full p-2 border rounded ${errors.nurseCardCount ? 'border-red-500' : ''}`}
-                min="1"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                1x3 cards with nurse name, spectra number, relief nurse, and patient assignments
-              </p>
-              {errors.nurseCardCount && (
-                <p className="text-red-500 text-xs mt-1">{errors.nurseCardCount}</p>
-              )}
-            </div>
-            
-            {/* PCT Cards */}
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Number of PCT Cards
-              </label>
-              <input
-                type="number"
-                name="pctCardCount"
-                value={formData.pctCardCount}
-                onChange={handleChange}
-                className={`w-full p-2 border rounded ${errors.pctCardCount ? 'border-red-500' : ''}`}
-                min="0"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                2x2 cards for patient care techs with name, spectra number, relief tech, and room assignments
-              </p>
-              {errors.pctCardCount && (
-                <p className="text-red-500 text-xs mt-1">{errors.pctCardCount}</p>
-              )}
-            </div>
-            
-            {/* Charge Nurse */}
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                name="hasChargeNurse"
-                checked={formData.hasChargeNurse}
-                onChange={handleChange}
-                className="mr-2"
-                id="hasChargeNurse"
-              />
-              <label className="text-sm font-medium" htmlFor="hasChargeNurse">
-                Include Charge Nurse Card (2x1)
-              </label>
-            </div>
-            
-            {/* Unit Clerk */}
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                name="hasUnitClerk"
-                checked={formData.hasUnitClerk}
-                onChange={handleChange}
-                className="mr-2"
-                id="hasUnitClerk"
-              />
-              <label className="text-sm font-medium" htmlFor="hasUnitClerk">
-                Include Unit Clerk Card (2x1)
-              </label>
-            </div>
-          </div>
-          
-          <div className="flex justify-end space-x-3 mt-6">
-            <Button variant="outline" type="button" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit">
-              Create Unit
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+                <DialogTitle>Create New Unit</DialogTitle>
+                <DialogDescription>Fill in the details for the new unit.</DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSubmit}>
+              <div className="space-y-4 py-4">
+                {/* Unit Designation */}
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Unit Designation
+                  </label>
+                  <input
+                    type="text"
+                    name="designation"
+                    value={formData.designation}
+                    onChange={handleChange}
+                    className={`w-full p-2 border rounded ${errors.designation ? 'border-red-500' : 'border-gray-300'}`}
+                    placeholder="e.g., 4 West"
+                  />
+                  {errors.designation && (
+                    <p className="text-red-500 text-xs mt-1">{errors.designation}</p>
+                  )}
+                </div>
+                
+                {/* Number of Patient Rooms */}
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Number of Patient Rooms
+                  </label>
+                  <input
+                    type="number"
+                    name="roomCount"
+                    value={formData.roomCount}
+                    onChange={handleChange}
+                    className={`w-full p-2 border rounded ${errors.roomCount ? 'border-red-500' : 'border-gray-300'}`}
+                    min="1"
+                  />
+                  {errors.roomCount && (
+                    <p className="text-red-500 text-xs mt-1">{errors.roomCount}</p>
+                  )}
+                </div>
+                
+                {/* Room Number Ranges */}
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Room Number Range(s)
+                  </label>
+                  <input
+                    type="text"
+                    name="roomRanges"
+                    value={formData.roomRanges.join(', ')}
+                    onChange={handleChange}
+                    className={`w-full p-2 border rounded ${errors.roomRanges ? 'border-red-500' : 'border-gray-300'}`}
+                    placeholder="e.g., 401-412, 450-455"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Enter ranges separated by commas (e.g., 401-412, 450-455)
+                  </p>
+                  {errors.roomRanges && (
+                    <p className="text-red-500 text-xs mt-1">{errors.roomRanges}</p>
+                  )}
+                </div>
+                
+                {/* Nurse Cards */}
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Standard Number of Nurse Cards
+                  </label>
+                  <input
+                    type="number"
+                    name="nurseCardCount"
+                    value={formData.nurseCardCount}
+                    onChange={handleChange}
+                    className={`w-full p-2 border rounded ${errors.nurseCardCount ? 'border-red-500' : 'border-gray-300'}`}
+                    min="1"
+                  />
+                  {errors.nurseCardCount && (
+                    <p className="text-red-500 text-xs mt-1">{errors.nurseCardCount}</p>
+                  )}
+                </div>
+                
+                {/* PCT Cards */}
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Number of PCT Cards
+                  </label>
+                  <input
+                    type="number"
+                    name="pctCardCount"
+                    value={formData.pctCardCount}
+                    onChange={handleChange}
+                    className={`w-full p-2 border rounded ${errors.pctCardCount ? 'border-red-500' : 'border-gray-300'}`}
+                    min="0"
+                  />
+                  {errors.pctCardCount && (
+                    <p className="text-red-500 text-xs mt-1">{errors.pctCardCount}</p>
+                  )}
+                </div>
+                
+                {/* Charge Nurse */}
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="hasChargeNurse"
+                    checked={formData.hasChargeNurse}
+                    onChange={handleChange}
+                    className="mr-2"
+                    id="hasChargeNurse"
+                  />
+                  <label className="text-sm font-medium" htmlFor="hasChargeNurse">
+                    Include Charge Nurse Card
+                  </label>
+                </div>
+                
+                {/* Unit Clerk */}
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="hasUnitClerk"
+                    checked={formData.hasUnitClerk}
+                    onChange={handleChange}
+                    className="mr-2"
+                    id="hasUnitClerk"
+                  />
+                  <label className="text-sm font-medium" htmlFor="hasUnitClerk">
+                    Include Unit Clerk Card
+                  </label>
+                </div>
+              </div>
+              
+              <DialogFooter className="pt-4">
+                <Button variant="outline" type="button" onClick={onClose}>
+                  Cancel
+                </Button>
+                <Button type="submit">
+                  Create Unit
+                </Button>
+              </DialogFooter>
+            </form>
+        </DialogContent>
+    </Dialog>
   );
 }

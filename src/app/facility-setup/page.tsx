@@ -1,162 +1,236 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { CreateUnitDialog } from '@/components/facility/create-unit-dialog';
 import { ModuleToggleCard } from '@/components/facility/module-toggle-card';
-import { PatientGrid } from '@/components/shared/patient-grid-optimized';
+import { PatientGrid } from '@/components/shared/patient-grid';
 import { UnitCard } from '@/components/facility/unit-card';
-import { getUnits, createUnit, getModules, updateModule, setupDefaultModules, initializeUnitData, Unit, Module } from '@/lib/firebase';
+import { 
+  getUnits, 
+  createUnit, 
+  getModules, 
+  updateModule, 
+  setupDefaultModules, 
+  Unit, 
+  Module,
+  Facility,
+  getFacilities,
+  createFacility
+} from '@/lib/firebase';
 import { toast } from '@/components/ui/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { PlusCircle, Hospital } from 'lucide-react';
+import { LoginDialog } from '@/components/auth/login-dialog';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/lib/firebase-config';
 
 export default function FacilitySetupPage() {
+  const [facilities, setFacilities] = useState<Facility[]>([]);
+  const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
   const [units, setUnits] = useState<Unit[]>([]);
   const [modules, setModules] = useState<Module[]>([]);
   const [isCreateUnitOpen, setIsCreateUnitOpen] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [facilityToAuth, setFacilityToAuth] = useState<Facility | null>(null);
+  const [isCreatingFacility, setIsCreatingFacility] = useState(false);
+  const [newFacilityName, setNewFacilityName] = useState('');
 
-  // Load units and modules on component mount
+
+  // Load initial data
   useEffect(() => {
-    const loadData = async () => {
+    const loadInitialData = async () => {
       try {
         setLoading(true);
-        
-        // Initialize default modules if they don't exist
         await setupDefaultModules();
-        
-        // Load units and modules in parallel for better performance
-        const [unitData, moduleData] = await Promise.all([
-          getUnits(),
+        const [facilitiesData, modulesData] = await Promise.all([
+          getFacilities(),
           getModules()
         ]);
-        
-        setUnits(unitData);
-        setModules(moduleData);
-        
-        // Set selected unit to the first unit if available
-        if (unitData.length > 0 && !selectedUnit) {
-          setSelectedUnit(unitData[0]);
-        }
+        setFacilities(facilitiesData);
+        setModules(modulesData);
       } catch (error) {
-        console.error('Error loading data:', error);
+        console.error('Error loading initial data:', error);
         toast({
           title: 'Error',
-          description: 'Failed to load data. Please try again.',
+          description: 'Failed to load initial data. Please try again.',
           variant: 'destructive',
         });
       } finally {
         setLoading(false);
       }
     };
-    
-    loadData();
+    loadInitialData();
   }, []);
 
-  const handleCreateUnit = async (unitData: Omit<Unit, 'id' | 'createdAt' | 'updatedAt'>) => {
+  // Load units when a facility is selected and authenticated
+  useEffect(() => {
+    if (selectedFacility && isAuthenticated) {
+      const loadUnits = async () => {
+        try {
+          setLoading(true);
+          const unitData = await getUnits(selectedFacility.id);
+          setUnits(unitData);
+          if (unitData.length > 0) {
+            setSelectedUnit(unitData[0]);
+          } else {
+            setSelectedUnit(null);
+          }
+        } catch (error) {
+          console.error('Error loading units:', error);
+          toast({
+            title: 'Error',
+            description: `Failed to load units for ${selectedFacility.name}.`,
+            variant: 'destructive',
+          });
+        } finally {
+          setLoading(false);
+        }
+      };
+      loadUnits();
+    }
+  }, [selectedFacility, isAuthenticated]);
+
+  const handleFacilitySelect = (facility: Facility) => {
+    if (selectedFacility?.id === facility.id && isAuthenticated) {
+      // If the same facility is clicked and we are authenticated, do nothing
+      return;
+    }
+    setFacilityToAuth(facility);
+    setIsLoginOpen(true);
+  };
+  
+  const handleLogin = async (data: {email:string, password: string}): Promise<boolean> => {
     try {
-      // Show loading toast
-      toast({
-        title: 'Creating Unit',
-        description: 'Please wait while we set up your unit...',
-      });
-      
-      const newUnit = await createUnit(unitData);
-      
-      // Update local state immediately (optimistic update)
+        await signInWithEmailAndPassword(auth, data.email, data.password);
+        toast({ title: "Login Successful", description: `Welcome to ${facilityToAuth?.name}` });
+        setSelectedFacility(facilityToAuth);
+        setIsAuthenticated(true);
+        setIsLoginOpen(false);
+        return true;
+    } catch(error) {
+        console.error("Login failed:", error)
+        toast({ title: "Login Failed", description: "Invalid credentials. Please try again.", variant: 'destructive' });
+        return false;
+    }
+  };
+  
+  const handleCreateFacility = async () => {
+    if (!newFacilityName.trim()) {
+      toast({ title: 'Error', description: 'Facility name cannot be empty', variant: 'destructive' });
+      return;
+    }
+    try {
+      const newFacility = await createFacility({ name: newFacilityName });
+      setFacilities(prev => [...prev, newFacility]);
+      setNewFacilityName('');
+      setIsCreatingFacility(false);
+      toast({ title: 'Success', description: `Facility "${newFacility.name}" created.` });
+    } catch (error) {
+      console.error("Failed to create facility", error);
+      toast({ title: "Error", description: "Could not create facility", variant: 'destructive' });
+    }
+  };
+
+  const handleCreateUnit = async (unitData: Omit<Unit, 'id' | 'createdAt' | 'updatedAt' | 'facilityId'>) => {
+    if (!selectedFacility) return;
+    try {
+      toast({ title: 'Creating Unit', description: 'Please wait...' });
+      const newUnit = await createUnit({ ...unitData, facilityId: selectedFacility.id });
       setUnits(prevUnits => [...prevUnits, newUnit]);
       setSelectedUnit(newUnit);
       setIsCreateUnitOpen(false);
-      
-      toast({
-        title: 'Success',
-        description: `Unit "${newUnit.designation}" has been created.`,
-      });
+      toast({ title: 'Success', description: `Unit "${newUnit.designation}" has been created.` });
     } catch (error) {
       console.error('Error creating unit:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to create unit. Please try again.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: 'Failed to create unit.', variant: 'destructive' });
     }
   };
 
   const handleModuleToggle = async (moduleId: string) => {
     try {
-      // Find the module and toggle its state
       const moduleToUpdate = modules.find(m => m.id === moduleId);
       if (!moduleToUpdate) return;
       
-      // Update local state immediately (optimistic update)
-      setModules(modules.map(module => 
-        module.id === moduleId 
-          ? { ...module, enabled: !module.enabled } 
-          : module
-      ));
+      const newEnabledState = !moduleToUpdate.enabled;
+      setModules(modules.map(module => module.id === moduleId ? { ...module, enabled: newEnabledState } : module));
+      await updateModule(moduleId, newEnabledState);
       
-      // Update in Firestore
-      await updateModule(moduleId, !moduleToUpdate.enabled);
-      
-      toast({
-        title: 'Module Updated',
-        description: `${moduleToUpdate.name} has been ${!moduleToUpdate.enabled ? 'enabled' : 'disabled'}.`,
-      });
+      toast({ title: 'Module Updated', description: `${moduleToUpdate.name} has been ${newEnabledState ? 'enabled' : 'disabled'}.` });
     } catch (error) {
       console.error('Error toggling module:', error);
-      
-      // Revert the optimistic update if there was an error
-      setModules(prevModules => [...prevModules]);
-      
-      toast({
-        title: 'Error',
-        description: 'Failed to update module. Please try again.',
-        variant: 'destructive',
-      });
+      setModules(modules); // Revert optimistic update
+      toast({ title: 'Error', description: 'Failed to update module.', variant: 'destructive' });
     }
   };
 
-  const handleSelectUnit = (unit: Unit) => {
-    setSelectedUnit(unit);
-  };
-
-  if (loading) {
+  if (loading && facilities.length === 0) {
     return (
       <div className="container mx-auto p-6">
-        <div className="flex justify-between items-center mb-8">
-          <Skeleton className="h-10 w-48" />
-          <Skeleton className="h-10 w-32" />
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left sidebar skeleton */}
-          <div className="space-y-4">
-            <Skeleton className="h-8 w-24 mb-4" />
-            {[1, 2, 3].map(i => (
-              <Skeleton key={i} className="h-24 w-full rounded-lg" />
-            ))}
-          </div>
-
-          {/* Main content skeleton */}
-          <div className="lg:col-span-2">
-            <Skeleton className="h-8 w-48 mb-4" />
-            <Skeleton className="h-64 w-full rounded-lg" />
-          </div>
+        <Skeleton className="h-10 w-48 mb-8" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[1,2,3,4].map(i => <Skeleton key={i} className="h-32 w-full" />)}
         </div>
       </div>
     );
+  }
+  
+  if (!isAuthenticated || !selectedFacility) {
+    return (
+       <div className="container mx-auto p-6">
+         <h1 className="text-3xl font-bold mb-6">Select a Facility</h1>
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+           {facilities.map(facility => (
+             <div key={facility.id} onClick={() => handleFacilitySelect(facility)}
+                  className="border rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50 hover:shadow-md transition-all">
+                <Hospital className="w-12 h-12 mb-4 text-gray-500" />
+                <h2 className="text-xl font-semibold">{facility.name}</h2>
+             </div>
+           ))}
+            <div className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center">
+              {isCreatingFacility ? (
+                <div className="w-full">
+                  <input
+                    type="text"
+                    value={newFacilityName}
+                    onChange={(e) => setNewFacilityName(e.target.value)}
+                    placeholder="New Facility Name"
+                    className="w-full p-2 border rounded mb-2"
+                    autoFocus
+                  />
+                  <div className='flex gap-2 justify-center'>
+                    <Button onClick={handleCreateFacility} size="sm">Create</Button>
+                    <Button variant="ghost" size="sm" onClick={() => setIsCreatingFacility(false)}>Cancel</Button>
+                  </div>
+                </div>
+              ) : (
+                <button onClick={() => setIsCreatingFacility(true)} className="w-full h-full flex flex-col items-center justify-center">
+                  <PlusCircle className="w-12 h-12 mb-4 text-gray-400" />
+                  <h2 className="text-xl font-semibold text-gray-600">Add Facility</h2>
+                </button>
+              )}
+            </div>
+         </div>
+         <LoginDialog open={isLoginOpen} onOpenChange={setIsLoginOpen} onLogin={handleLogin} />
+       </div>
+    )
   }
 
   return (
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Facility Setup</h1>
+        <div>
+            <h1 className="text-3xl font-bold">Facility Setup: {selectedFacility.name}</h1>
+            <Button variant="link" className="p-0 h-auto" onClick={() => { setIsAuthenticated(false); setSelectedFacility(null); }}>Switch Facility</Button>
+        </div>
         <Button onClick={() => setIsCreateUnitOpen(true)}>Create New Unit</Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left sidebar - Units list */}
         <div className="space-y-4">
           <h2 className="text-xl font-semibold mb-4">Units</h2>
           {units.length > 0 ? (
@@ -165,35 +239,33 @@ export default function FacilitySetupPage() {
                 key={unit.id} 
                 unit={unit} 
                 isSelected={selectedUnit?.id === unit.id}
-                onSelect={() => handleSelectUnit(unit)}
+                onSelect={() => setSelectedUnit(unit)}
               />
             ))
           ) : (
             <div className="bg-gray-50 border rounded-lg p-6 text-center">
-              <p className="text-gray-500 mb-4">No units have been created yet.</p>
+              <p className="text-gray-500 mb-4">No units created for this facility.</p>
               <Button variant="outline" onClick={() => setIsCreateUnitOpen(true)}>
-                Create Your First Unit
+                Create First Unit
               </Button>
             </div>
           )}
         </div>
 
-        {/* Main content - Patient Grid */}
         <div className="lg:col-span-2">
           <h2 className="text-xl font-semibold mb-4">
-            {selectedUnit ? `${selectedUnit.designation} Layout` : 'Select a Unit'}
+            {selectedUnit ? `${selectedUnit.designation} Layout` : 'Select or Create a Unit'}
           </h2>
           {selectedUnit ? (
             <PatientGrid unitId={selectedUnit.id} />
           ) : (
             <div className="bg-gray-50 border rounded-lg p-12 text-center">
-              <p className="text-gray-500 mb-2">Select a unit from the sidebar or create a new unit to view the layout.</p>
+              <p className="text-gray-500">Select a unit or create one to see the layout.</p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Modules Section */}
       <div className="mt-12">
         <h2 className="text-2xl font-semibold mb-6">Module Configuration</h2>
         {modules.length > 0 ? (
@@ -213,12 +285,12 @@ export default function FacilitySetupPage() {
         )}
       </div>
 
-      {/* Create Unit Dialog */}
       <CreateUnitDialog
         open={isCreateUnitOpen}
         onClose={() => setIsCreateUnitOpen(false)}
         onCreateUnit={handleCreateUnit}
       />
+      <LoginDialog open={isLoginOpen} onOpenChange={setIsLoginOpen} onLogin={handleLogin} />
     </div>
   );
 }
