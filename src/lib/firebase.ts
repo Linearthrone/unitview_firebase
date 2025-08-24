@@ -140,9 +140,14 @@ export async function createUnit(unitData: Omit<Unit, 'id' | 'createdAt' | 'upda
   
   await setDoc(unitRef, newUnit);
   
-  // Update cache
-  const facilityUnits = unitsCache.get(newUnit.facilityId) || [];
-  unitsCache.set(newUnit.facilityId, [...facilityUnits, newUnit]);
+  // Safely update cache
+  if (unitsCache.has(newUnit.facilityId)) {
+    const facilityUnits = unitsCache.get(newUnit.facilityId) || [];
+    unitsCache.set(newUnit.facilityId, [...facilityUnits, newUnit]);
+  } else {
+    // If the facility is not in the cache, initialize it.
+    unitsCache.set(newUnit.facilityId, [newUnit]);
+  }
   
   return newUnit;
 }
@@ -952,5 +957,7 @@ export async function initializeUnitData(unit: Unit): Promise<{
   };
 }
 export { app, db, storage, auth };
+
+    
 
     
