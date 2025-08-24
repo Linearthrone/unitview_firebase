@@ -810,26 +810,36 @@ export async function loadUnitData(unitId: string): Promise<{
   chargeNurse: StaffMember | null,
   unitClerk: StaffMember | null
 }> {
-  if (!unitId) return { unit: null, patients: [], nurses: [], pcts: [], chargeNurse: null, unitClerk: null };
+  if (!unitId) {
+    return { unit: null, patients: [], nurses: [], pcts: [], chargeNurse: null, unitClerk: null };
+  }
 
   // Check cache first
-  if (unitDataCache.has(unitId)) {
-    const cached = unitDataCache.get(unitId)!;
-    // A simple check to see if the cache is populated
-    if (cached.unit) return cached;
+  const cached = unitDataCache.get(unitId);
+  if (cached?.unit) {
+      return cached;
   }
   
-  // Load all data in parallel
-  const [unit, patients, nurses, pcts, chargeNurse, unitClerk] = await Promise.all([
-    getUnit(unitId),
-    getPatientsByUnit(unitId),
-    getNursesByUnit(unitId),
-    getPCTsByUnit(unitId),
-    getStaffByUnitAndRole(unitId, 'chargeNurse'),
-    getStaffByUnitAndRole(unitId, 'unitClerk')
+  // Fetch the unit first, as we need it for context.
+  const unit = await getUnit(unitId);
+
+  // If no unit, there's nothing to load.
+  if (!unit) {
+    return { unit: null, patients: [], nurses: [], pcts: [], chargeNurse: null, unitClerk: null };
+  }
+
+  // Now, fetch all related data in parallel.
+  const [patients, nurses, pcts, chargeNurse, unitClerk] = await Promise.all([
+      getPatientsByUnit(unitId),
+      getNursesByUnit(unitId),
+      getPCTsByUnit(unitId),
+      getStaffByUnitAndRole(unitId, 'chargeNurse'),
+      getStaffByUnitAndRole(unitId, 'unitClerk')
   ]);
   
   const data = { unit, patients, nurses, pcts, chargeNurse, unitClerk };
+  
+  // Store the fully loaded data in the cache.
   unitDataCache.set(unitId, data);
 
   return data;
@@ -942,3 +952,5 @@ export async function initializeUnitData(unit: Unit): Promise<{
   };
 }
 export { app, db, storage, auth };
+
+    
