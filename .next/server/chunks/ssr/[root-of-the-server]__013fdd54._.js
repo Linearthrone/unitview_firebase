@@ -4058,23 +4058,36 @@ async function setupDefaultModules() {
     await initializeModules(defaultModules);
 }
 async function loadUnitData(unitId) {
-    if (!unitId) return {
-        unit: null,
-        patients: [],
-        nurses: [],
-        pcts: [],
-        chargeNurse: null,
-        unitClerk: null
-    };
-    // Check cache first
-    if (unitDataCache.has(unitId)) {
-        const cached = unitDataCache.get(unitId);
-        // A simple check to see if the cache is populated
-        if (cached.unit) return cached;
+    if (!unitId) {
+        return {
+            unit: null,
+            patients: [],
+            nurses: [],
+            pcts: [],
+            chargeNurse: null,
+            unitClerk: null
+        };
     }
-    // Load all data in parallel
-    const [unit, patients, nurses, pcts, chargeNurse, unitClerk] = await Promise.all([
-        getUnit(unitId),
+    // Check cache first
+    const cached = unitDataCache.get(unitId);
+    if (cached?.unit) {
+        return cached;
+    }
+    // Fetch the unit first, as we need it for context.
+    const unit = await getUnit(unitId);
+    // If no unit, there's nothing to load.
+    if (!unit) {
+        return {
+            unit: null,
+            patients: [],
+            nurses: [],
+            pcts: [],
+            chargeNurse: null,
+            unitClerk: null
+        };
+    }
+    // Now, fetch all related data in parallel.
+    const [patients, nurses, pcts, chargeNurse, unitClerk] = await Promise.all([
         getPatientsByUnit(unitId),
         getNursesByUnit(unitId),
         getPCTsByUnit(unitId),
@@ -4089,6 +4102,7 @@ async function loadUnitData(unitId) {
         chargeNurse,
         unitClerk
     };
+    // Store the fully loaded data in the cache.
     unitDataCache.set(unitId, data);
     return data;
 }

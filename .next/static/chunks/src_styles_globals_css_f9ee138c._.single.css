@@ -327,8 +327,16 @@ body {
   inset: 0;
 }
 
+.left-\[50\%\] {
+  left: 50%;
+}
+
 .right-2 {
   right: .5rem;
+}
+
+.right-4 {
+  right: 1rem;
 }
 
 .top-0 {
@@ -339,14 +347,6 @@ body {
   top: .5rem;
 }
 
-.left-\[50\%\] {
-  left: 50%;
-}
-
-.right-4 {
-  right: 1rem;
-}
-
 .top-4 {
   top: 1rem;
 }
@@ -355,12 +355,12 @@ body {
   top: 50%;
 }
 
-.z-\[100\] {
-  z-index: 100;
-}
-
 .z-50 {
   z-index: 50;
+}
+
+.z-\[100\] {
+  z-index: 100;
 }
 
 .col-span-1 {
@@ -596,12 +596,12 @@ body {
   max-width: 64rem;
 }
 
-.max-w-xs {
-  max-width: 20rem;
-}
-
 .max-w-lg {
   max-width: 32rem;
+}
+
+.max-w-xs {
+  max-width: 20rem;
 }
 
 .shrink-0 {
@@ -714,6 +714,12 @@ body {
   margin-bottom: calc(.25rem * var(--tw-space-y-reverse));
 }
 
+.space-y-1\.5 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-y-reverse: 0;
+  margin-top: calc(.375rem * calc(1 - var(--tw-space-y-reverse)));
+  margin-bottom: calc(.375rem * var(--tw-space-y-reverse));
+}
+
 .space-y-2 > :not([hidden]) ~ :not([hidden]) {
   --tw-space-y-reverse: 0;
   margin-top: calc(.5rem * calc(1 - var(--tw-space-y-reverse)));
@@ -724,12 +730,6 @@ body {
   --tw-space-y-reverse: 0;
   margin-top: calc(1rem * calc(1 - var(--tw-space-y-reverse)));
   margin-bottom: calc(1rem * var(--tw-space-y-reverse));
-}
-
-.space-y-1\.5 > :not([hidden]) ~ :not([hidden]) {
-  --tw-space-y-reverse: 0;
-  margin-top: calc(.375rem * calc(1 - var(--tw-space-y-reverse)));
-  margin-bottom: calc(.375rem * var(--tw-space-y-reverse));
 }
 
 .overflow-hidden {
@@ -875,6 +875,10 @@ body {
   background-color: hsl(var(--background));
 }
 
+.bg-black\/80 {
+  background-color: #000c;
+}
+
 .bg-blue-100 {
   --tw-bg-opacity: 1;
   background-color: rgb(219 234 254 / var(--tw-bg-opacity, 1));
@@ -974,10 +978,6 @@ body {
 .bg-yellow-50 {
   --tw-bg-opacity: 1;
   background-color: rgb(254 252 232 / var(--tw-bg-opacity, 1));
-}
-
-.bg-black\/80 {
-  background-color: #000c;
 }
 
 .p-0 {
@@ -1227,6 +1227,10 @@ body {
   color: rgb(67 56 202 / var(--tw-text-opacity, 1));
 }
 
+.text-muted-foreground {
+  color: hsl(var(--muted-foreground));
+}
+
 .text-primary {
   color: hsl(var(--primary));
 }
@@ -1284,10 +1288,6 @@ body {
   color: rgb(133 77 14 / var(--tw-text-opacity, 1));
 }
 
-.text-muted-foreground {
-  color: hsl(var(--muted-foreground));
-}
-
 .underline-offset-4 {
   text-underline-offset: 4px;
 }
@@ -1296,12 +1296,12 @@ body {
   opacity: 0;
 }
 
-.opacity-90 {
-  opacity: .9;
-}
-
 .opacity-70 {
   opacity: .7;
+}
+
+.opacity-90 {
+  opacity: .9;
 }
 
 .shadow {
@@ -1635,12 +1635,12 @@ body {
   background-color: hsl(var(--primary));
 }
 
-.data-\[state\=unchecked\]\:bg-input[data-state="unchecked"] {
-  background-color: hsl(var(--input));
-}
-
 .data-\[state\=open\]\:bg-accent[data-state="open"] {
   background-color: hsl(var(--accent));
+}
+
+.data-\[state\=unchecked\]\:bg-input[data-state="unchecked"] {
+  background-color: hsl(var(--input));
 }
 
 .data-\[state\=open\]\:text-muted-foreground[data-state="open"] {
@@ -1671,12 +1671,12 @@ body {
   animation-duration: .15s;
 }
 
-.data-\[state\=closed\]\:fade-out-80[data-state="closed"] {
-  --tw-exit-opacity: .8;
-}
-
 .data-\[state\=closed\]\:fade-out-0[data-state="closed"] {
   --tw-exit-opacity: 0;
+}
+
+.data-\[state\=closed\]\:fade-out-80[data-state="closed"] {
+  --tw-exit-opacity: .8;
 }
 
 .data-\[state\=open\]\:fade-in-0[data-state="open"] {
@@ -1691,16 +1691,12 @@ body {
   --tw-enter-scale: .95;
 }
 
-.data-\[state\=closed\]\:slide-out-to-right-full[data-state="closed"] {
-  --tw-exit-translate-x: 100%;
-}
-
-.data-\[state\=open\]\:slide-in-from-top-full[data-state="open"] {
-  --tw-enter-translate-y: -100%;
-}
-
 .data-\[state\=closed\]\:slide-out-to-left-1\/2[data-state="closed"] {
   --tw-exit-translate-x: -50%;
+}
+
+.data-\[state\=closed\]\:slide-out-to-right-full[data-state="closed"] {
+  --tw-exit-translate-x: 100%;
 }
 
 .data-\[state\=closed\]\:slide-out-to-top-\[48\%\][data-state="closed"] {
@@ -1713,6 +1709,10 @@ body {
 
 .data-\[state\=open\]\:slide-in-from-top-\[48\%\][data-state="open"] {
   --tw-enter-translate-y: -48%;
+}
+
+.data-\[state\=open\]\:slide-in-from-top-full[data-state="open"] {
+  --tw-enter-translate-y: -100%;
 }
 
 @media (width >= 640px) {
