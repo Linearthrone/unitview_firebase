@@ -3449,8 +3449,8 @@ async function createFacility(facilityData) {
     const timestamp = Date.now();
     const facilityRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["doc"])(facilitiesCollection);
     const newFacility = {
-        ...facilityData,
         id: facilityRef.id,
+        ...facilityData,
         createdAt: timestamp
     };
     await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["setDoc"])(facilityRef, newFacility);
@@ -4120,7 +4120,7 @@ async function loadUnitData(unitId) {
     }
     // Check cache first
     const cached = unitDataCache.get(unitId);
-    if (cached?.unit) {
+    if (cached?.unit && cached.patients.length > 0) {
         return cached;
     }
     // Fetch the unit first, as we need it for context.
