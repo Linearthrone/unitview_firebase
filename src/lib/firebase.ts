@@ -105,8 +105,8 @@ export async function createFacility(facilityData: Omit<Facility, 'id' | 'create
   const timestamp = Date.now();
   const facilityRef = doc(facilitiesCollection);
   const newFacility: Facility = {
-    ...facilityData,
     id: facilityRef.id,
+    ...facilityData,
     createdAt: timestamp,
   };
   await setDoc(facilityRef, newFacility);
@@ -816,7 +816,7 @@ export async function loadUnitData(unitId: string): Promise<{
 
   // Check cache first
   const cached = unitDataCache.get(unitId);
-  if (cached?.unit) {
+  if (cached?.unit && cached.patients.length > 0) {
       return cached;
   }
   
