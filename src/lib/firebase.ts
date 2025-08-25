@@ -110,9 +110,16 @@ export async function createFacility(facilityData: Omit<Facility, 'id' | 'create
     createdAt: timestamp,
   };
   await setDoc(facilityRef, newFacility);
+  
   if (facilitiesCache) {
     facilitiesCache.push(newFacility);
+  } else {
+    // If cache wasn't initialized, fetch it again to include the new one.
+    // This is a simple way to ensure consistency.
+    facilitiesCache = null; 
+    await getFacilities();
   }
+  
   return newFacility;
 }
 
@@ -141,13 +148,8 @@ export async function createUnit(unitData: Omit<Unit, 'id' | 'createdAt' | 'upda
   await setDoc(unitRef, newUnit);
   
   // Safely update cache
-  if (unitsCache.has(newUnit.facilityId)) {
-    const facilityUnits = unitsCache.get(newUnit.facilityId) || [];
-    unitsCache.set(newUnit.facilityId, [...facilityUnits, newUnit]);
-  } else {
-    // If the facility is not in the cache, initialize it.
-    unitsCache.set(newUnit.facilityId, [newUnit]);
-  }
+  const facilityUnits = unitsCache.get(newUnit.facilityId) || [];
+  unitsCache.set(newUnit.facilityId, [...facilityUnits, newUnit]);
   
   return newUnit;
 }
@@ -171,17 +173,24 @@ export async function getUnits(facilityId: string): Promise<Unit[]> {
 }
 
 export async function getUnit(unitId: string): Promise<Unit | null> {
-  // Check cache first
-  const cachedData = unitDataCache.get(unitId);
-  if (cachedData?.unit) {
-    return cachedData.unit;
+  // Check cache first: iterate through all facilities in unitsCache
+  for (const facilityUnits of unitsCache.values()) {
+    const found = facilityUnits.find(u => u.id === unitId);
+    if (found) {
+      return found;
+    }
   }
   
   const unitRef = doc(unitsCollection, unitId);
   const unitSnap = await getDoc(unitRef);
   
   if (unitSnap.exists()) {
-    return { id: unitSnap.id, ...unitSnap.data() } as Unit;
+    const unit = { id: unitSnap.id, ...unitSnap.data() } as Unit;
+    // Pre-warm the cache if it doesn't exist for that facility
+    if (!unitsCache.has(unit.facilityId)) {
+      await getUnits(unit.facilityId);
+    }
+    return unit;
   }
   
   return null;
@@ -957,7 +966,3 @@ export async function initializeUnitData(unit: Unit): Promise<{
   };
 }
 export { app, db, storage, auth };
-
-    
-
-    
